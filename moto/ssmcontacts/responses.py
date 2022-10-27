@@ -17,54 +17,46 @@ class SSMContactsResponse(BaseResponse):
         return ssmcontacts_backends[self.current_account][self.region]
 
     def create_contact(self):
-        print(self._get_param("Type"))
         contact_arn = self.ssmcontacts_backend.create_contact(
             alias=self._get_param("Alias"),
             display_name=self._get_param("DisplayName"),
             type_str=self._get_param("Type"),
             plan=self._get_param("Plan"),
             tags=self._get_param("Tags"),
-            idempotency_token=self._get_param("IdempotencyToken"),
         )
-        return json.dumps(dict(contactArn=contact_arn))
+        return json.dumps({"ContactArn": contact_arn})
 
-    
     def create_contact_channel(self):
-        params = self._get_params()
-        contact_id = params.get("ContactId")
-        name = params.get("Name")
-        type = params.get("Type")
-        delivery_address = params.get("DeliveryAddress")
-        defer_activation = params.get("DeferActivation")
-        idempotency_token = params.get("IdempotencyToken")
+
         contact_channel_arn = self.ssmcontacts_backend.create_contact_channel(
-            contact_id=contact_id,
-            name=name,
-            type=type,
-            delivery_address=delivery_address,
-            defer_activation=defer_activation,
-            idempotency_token=idempotency_token,
+            contact_id=self._get_param("ContactId"),
+            name=self._get_param("Name"),
+            type_str=self._get_param("Type"),
+            delivery_address=self._get_param("DeliveryAddress"),
+            defer_activation=self._get_param("DeferActivation") or False,
         )
-        return json.dumps(dict(contactChannelArn=contact_channel_arn))
+        response = dict(ContactChannelArn=contact_channel_arn)
+        return json.dumps(response)
 
     def get_contact(self):
-        params = self._get_params()
-        contact_id = params.get("ContactArn")
-        return json.dumps(self.ssmcontacts_backend.get_contact(contact_id = contact_id))
+        return json.dumps(
+            self.ssmcontacts_backend.get_contact(
+                contact_id=self._get_param("ContactId")
+            )
+        )
 
     def list_contacts(self):
-        params = self._get_params()
-        next_token = params.get("NextToken")
-        max_results = params.get("MaxResults")
-        alias_prefix = params.get("AliasPrefix")
-        type = params.get("Type")
-        next_token, contacts = self.ssmcontacts_backend.list_contacts(
-            next_token=next_token,
-            max_results=max_results,
-            alias_prefix=alias_prefix,
-            type=type,
+        contacts, next_token = self.ssmcontacts_backend.list_contacts(
+            next_token=self._get_param("NextToken"),
+            max_results=self._get_param("MaxResults"),
+            alias_prefix=self._get_param("AliasPrefix"),
+            type_str=self._get_param("Type"),
         )
-        return json.dumps(dict(nextToken=next_token, contacts=contacts))
+        if next_token:
+            response = dict(NextToken=next_token, Contacts=contacts)
+        else:
+            response = dict(Contacts=contacts)
+        return json.dumps(response)
 
     # def list_tags_for_resource(self):
     #     params = self._get_params()
@@ -74,3 +66,60 @@ class SSMContactsResponse(BaseResponse):
     #     )
     #     # TODO: adjust response
     #     return json.dumps(dict(tags=tags))
+
+    def update_contact(self):
+        self.ssmcontacts_backend.update_contact(
+            contact_id=self._get_param("ContactId"),
+            display_name=self._get_param("DisplayName"),
+            plan=self._get_param("Plan"),
+        )
+        return "{}"
+
+    def update_contact_channel(self):
+        params = self._get_params()
+        contact_channel_id = params.get("ContactChannelId")
+        name = params.get("Name")
+        delivery_address = params.get("DeliveryAddress")
+        self.ssmcontacts_backend.update_contact_channel(
+            contact_channel_id=contact_channel_id,
+            name=name,
+            delivery_address=delivery_address,
+        )
+        return "{}"
+
+    def delete_contact(self):
+        params = self._get_params()
+        contact_id = params.get("ContactId")
+        self.ssmcontacts_backend.delete_contact(
+            contact_id=contact_id,
+        )
+        return "{}"
+
+    def delete_contact_channel(self):
+        params = self._get_params()
+        contact_channel_id = params.get("ContactChannelId")
+        self.ssmcontacts_backend.delete_contact_channel(
+            contact_channel_id=contact_channel_id,
+        )
+        return "{}"
+
+    def get_contact_channel(self):
+        params = self._get_params()
+        contact_channel_id = params.get("ContactChannelId")
+        return json.dumps(
+            self.ssmcontacts_backend.get_contact_channel(
+                contact_channel_id=contact_channel_id,
+            )
+        )
+
+    def list_contact_channels(self):
+        contact_channels, next_token  = self.ssmcontacts_backend.list_contact_channels(
+            contact_id=self._get_param("ContactId"),
+            next_token=self._get_param("NextToken"),
+            max_results=self._get_param("MaxResults")
+        )
+        if next_token:
+            response = dict(NextToken=next_token, ContactChannels=contact_channels)
+        else:
+            response = dict(ContactChannels=contact_channels)
+        return json.dumps(response)

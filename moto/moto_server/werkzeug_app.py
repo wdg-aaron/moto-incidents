@@ -271,18 +271,13 @@ def create_backend_app(service):
     # Get an instance of this backend.
     # We'll only use this backend to resolve the URL's, so the exact region/account_id is irrelevant
     if isinstance(backend_dict, BackendDict):
-        print(f"bd: {backend_dict.keys()}")
         if "us-east-1" in backend_dict[DEFAULT_ACCOUNT_ID]:
-            print(f"wtf {backend_dict[DEFAULT_ACCOUNT_ID]}")
-            print(backend_dict[DEFAULT_ACCOUNT_ID]["us-east-1"])
             backend = backend_dict[DEFAULT_ACCOUNT_ID]["us-east-1"]
         else:
-            print("else")
             backend = backend_dict[DEFAULT_ACCOUNT_ID]["global"]
     else:
-        print(f"wat: {backend_dict['global']}")
         backend = backend_dict["global"]
-    print(backend)
+
     for url_path, handler in backend.flask_paths.items():
         view_func = convert_to_flask_response(handler)
         if handler.__name__ == "dispatch":
