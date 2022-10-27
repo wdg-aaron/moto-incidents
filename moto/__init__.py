@@ -166,7 +166,8 @@ mock_textract = lazy_load(".textract", "mock_textract")
 mock_emrserverless = lazy_load(
     ".emrserverless", "mock_emrserverless", boto3_name="emr-serverless"
 )
-
+mock_ssmcontacts = lazy_load(".ssmcontacts", "mock_ssmcontacts", boto3_name="ssm-contacts")
+mock_ssmincidents = lazy_load(".ssmincidents", "mock_ssmincidents", boto3_name="ssm-incidents")
 
 class MockAll(ContextDecorator):
     def __init__(self):
